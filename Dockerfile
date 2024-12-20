@@ -1,0 +1,26 @@
+# IMAGEN BASE DE JAVA 23
+FROM eclipse-temurin:23.0.1_11-jdk
+
+# DEFINIR DIRECTORIO RAÍZ DE TRABAJO DENTRO DEL CONTENEDOR
+WORKDIR /root
+
+# COPIAR Y PEGAR ARCHIVOS AL CONTENEDOR
+COPY ./pom.xml /root
+COPY ./.mvn /root/.mvn
+COPY ./mvnw /root
+COPY ./.env /root
+
+# DESCARGAR DEPENDENCIAS DENTRO DEL CONTENEDOR
+RUN ./mvnw dependency:go-offline
+
+# COPIAR CÓDIGO FUENTE DENTRO DEL CONTENEDOR
+COPY ./src /root/src
+
+# CONSTRUIR APLICACIÓN
+RUN ./mvnw clean install -DskipTests
+
+# CAMBIAR NOMBRE DE LA APLICACION JAR CREADA A APP.JAR
+RUN mv -f target/*.jar target/app.jar
+
+# EJECUTAR APLICACIÓN AL INICIAR CONTENEDOR
+ENTRYPOINT [ "java","-jar", "/root/target/app.jar"]

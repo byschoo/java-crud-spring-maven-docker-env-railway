@@ -1,0 +1,36 @@
+services:
+
+  spring-api:
+    image: dockerizado-spring-api:V2.0-ENV_File
+    build: .
+    container_name: spring-api-container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    container_name: my-postgres-container
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    restart: always
+    container_name: my-pgadmin4-container
+    env_file:
+      - .env
+    ports:
+      - "8090:8080"
+    volumes:
+      - servers.json:/pgadmin4/servers.json
+
+volumes:
+  pgdata:
+  servers.json:
