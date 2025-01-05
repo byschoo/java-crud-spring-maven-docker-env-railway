@@ -1,18 +1,22 @@
 # IMAGEN BASE DE JAVA 23
-FROM eclipse-temurin:23.0.1_11-jdk
+FROM eclipse-temurin:21-jdk as build
 
+# COPIAR Y PEGAR ARCHIVOS AL CONTENEDOR
+COPY . /root
 # DEFINIR DIRECTORIO RAÍZ DE TRABAJO DENTRO DEL CONTENEDOR
 WORKDIR /root
 
 # COPIAR Y PEGAR ARCHIVOS AL CONTENEDOR
-COPY ./pom.xml /root
-COPY ./.mvn /root/.mvn
-COPY ./mvnw /root
+#COPY ./pom.xml /root
+#COPY ./.mvn /root/.mvn
+#COPY ./mvnw /root
 # SE DESCARTA ESTA LÍNEA PARA QUE FUNCIONE EN RAILWAY
 #COPY ./.env /root
 
+RUN chmod +x mvnw
+RUN ./mvnw package -DskipTests
 # DESCARGAR DEPENDENCIAS DENTRO DEL CONTENEDOR (VERSION 1)
-RUN ./mvnw dependency:go-offline
+#RUN ./mvnw dependency:go-offline
 #Descarga todas las bibliotecas y plugins necesarios, el proyecto ya no necesitará conectarse a internet para ser construido.
 
 # DESCARGAR DEPENDENCIAS DENTRO DEL CONTENEDOR (VERSION 2)
@@ -22,13 +26,13 @@ RUN ./mvnw dependency:go-offline
 # target/mvn-dependency-list.log: Es la ruta donde se guardará la lista de dependencias del proyecto.
 
 # COPIAR CÓDIGO FUENTE DENTRO DEL CONTENEDOR
-COPY ./src /root/src
+#COPY ./src /root/src
 
 # CONSTRUIR APLICACIÓN (VERSION 1)
 #RUN ./mvnw clean install -DskipTests
 
 # CONSTRUIR APLICACIÓN (VERSION 2)
-RUN ./mvnw -B -DskipTests clean dependency:list install
+#RUN ./mvnw -B -DskipTests clean dependency:list install
 # -B: Activa el modo batch, lo que hace que Maven ejecute las tareas de forma más silenciosa y sin interacciones con el usuario.
 # -DskipTests: Le indica a Maven que omita la ejecución de las pruebas durante la construcción.
 # clean: Limpia el directorio de salida (target) eliminando archivos generados en compilaciones anteriores.
@@ -38,5 +42,14 @@ RUN ./mvnw -B -DskipTests clean dependency:list install
 # CAMBIAR NOMBRE DE LA APLICACION JAR CREADA A APP.JAR
 RUN mv -f target/*.jar target/app.jar
 
+FROM eclipse-temurin:21-jre
+ARG PORT
+ENV PORT=${PORT}
+
+COPY --from=build /root/target/app.jar .
+
+RUN useradd runtime
+USER runtime
+
 # EJECUTAR APLICACIÓN AL INICIAR CONTENEDOR
-ENTRYPOINT [ "java","-jar", "/root/target/app.jar"]
+ENTRYPOINT [ "java", "-Dserver.port=${PORT}","-jar", "/root/target/app.jar"]
