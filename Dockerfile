@@ -8,7 +8,8 @@ WORKDIR /root
 COPY ./pom.xml /root
 COPY ./.mvn /root/.mvn
 COPY ./mvnw /root
-COPY ./.env /root
+# SE DESCARTA ESTA LÍNEA PARA QUE FUNCIONE EN RAILWAY
+#COPY ./.env /root
 
 # DESCARGAR DEPENDENCIAS DENTRO DEL CONTENEDOR (VERSION 1)
 #RUN ./mvnw dependency:go-offline
